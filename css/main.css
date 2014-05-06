@@ -132,6 +132,14 @@ small {
 	margin: 0px 0 0 0;
 }
 
+small a, small a:visited {
+	color: #555;
+}
+
+small a:hover {
+	color: #777;
+}
+
 code {
 	font-size: 18px;
 }
@@ -252,7 +260,7 @@ footer {
 	}
 }
 
-@media screen and (min-height: 900px) {
+@media screen and (min-height: 930px) {
 	footer {
 		height:300px;
 	}
@@ -260,15 +268,15 @@ footer {
 
 @media screen and (max-width: 700px), screen and (max-height: 700px) {
 	#container {
-		font-size: 50px;
+		font-size: 56px;
 		padding: 4% 0 80px;
  	}
 	#container2 {
-		font-size: 46px;
+		font-size: 38px;
 		padding: 1% 0 10px;
  	}
 	body {
-		font-size: 24px;
+		font-size: 22px;
 	}
 	code {
 		font-size: 16px;
@@ -281,11 +289,11 @@ footer {
 		padding: 4% 0 70px;
  	}
 	#container2 {
-		font-size: 38px;
+		font-size: 36px;
 		padding: 1% 0 5px;
  	}
 	body {
-		font-size: 22px;
+		font-size: 20px;
 	}
 	code {
 		font-size: 14px;

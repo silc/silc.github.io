@@ -1,1 +1,25 @@
-bar
+SILC Client 1.1.10
+==================
+
+This version introduces a new default private message key protection
+method by auto-negotiating private message key with SILC Key Exchange
+protocol over the SILC network, client-to-client.  The SKE is executed
+by encapsulating it inside private messages.  SKE results into secret
+shared key between the two clients and all private messages are protected
+with that key.  This provides complete end-to-end protection for private
+messages even if the SILC servers cannot be trusted.
+
+SILC Client will auto-negotiate the key when private message is sent
+for the first time.  Both users will be prompted to accept each others
+public keys and once accpeted they are cached and subsequent verification
+will be done automatically.  It is important to verify the public key
+to avoid the possibility of man-in-the-middle attacks.
+
+SILC Client automatically detects, within seconds, if the remote client
+does not support the new method.  User will receive a notification on
+screen telling that the private messages will be protected using normal
+session keys instead.  This may happen also if an error occurs during
+the key exchange protocol.
+
+This version also fixes numerous bugs that have been found using static
+analysis tools.
