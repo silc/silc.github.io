@@ -1,0 +1,584 @@
+SILCD_CONF(5)			  silc-server			 SILCD_CONF(5)
+
+
+
+NAME
+       silcd.conf - format of configuration file for silcd
+
+
+CONFIGURATION FILE
+       Silcd  reads  its  configuration from /etc/silc/silcd.conf (or the file
+       specified  with	-f).  The  file  contains  sections,  subsections  and
+       key-value  pairs. Each section or subsection is bound with a starting {
+       and ending }. Keys and values  are  of  the  format  'KEY=VALUE;'.  All
+       statements as well as sections must be terminated with a ';'.
+
+       Mandatory  section in configuration file is ServerInfo.	Other sections
+       are optional but recommended.  If General section is defined it must be
+       defined	before	the  ConnectionParams section.	On the other hand, the
+       ConnectionParams section must be defined before	Client,  ServerConnec-
+       tion and/or RouterConnection sections.  Other sections can be in a free
+       order in the configuration file.
+
+
+SECTION: General
+       General section contains global settings for the silcd.
+
+       dynamic_server
+	      Dynamic router connections.  If this  is	set  for  normal  SILC
+	      server the connection to primary router is not created untill it
+	      is actually needed.   Giving  for  example  /WHOIS  foobar@silc-
+	      net.org  would  then  create connection to the primary router to
+	      resolve user foobar.  On the other  hand	giving	/WHOIS	foobar
+	      would  try  to  search the user foobar locally, without creating
+	      the connection.  Note that giving /JOIN foobar will also created
+	      the  connection  as  current  SILC  Server version supports only
+	      global channels (all JOINs require connection to router, if  one
+	      is configured).
+
+
+       prefer_passphrase_auth
+	      If  both	public key and passphrase authentication are set for a
+	      connection, public key authentication is by  default  preferred.
+	      Setting  this  value  to	true causes silcd to prefer passphrase
+	      authentication in these cases.
+
+
+       require_reverse_lookup
+	      Set this value to true if all connecting hosts must have a fully
+	      qualified  domain  name  (FQDN).	If set to true, a host without
+	      FQDN is not allowed to connect to server.
+
+
+       connections_max
+	      Maximum number of incoming connections to this server. Any  fur-
+	      ther connections are refused.
+
+
+       connections_max_per_host
+	      Maximum  number  of  incoming  connections from any single host.
+	      This setting can be overridden on  a  connection-specific  basis
+	      with ConnectionParams.
+
+
+       version_protocol
+	      Defines  the  minimum required version of protocol to allow con-
+	      necting to server. A client or server using this version of pro-
+	      tocol  or  newer is allowed to connect, one using anything older
+	      will be rejected. Leaving unset allows all versions to  connect.
+	      This can be overridden with ConnectionParams.
+
+
+       version_software
+	      Defines  the  minimum required version of software to allow con-
+	      necting to server. A client or server that is of this version or
+	      newer  is  allowed  to connect, one using anything older will be
+	      rejected. Leaving unset allows all versions  to  connect.   This
+	      can be overridden with ConnectionParams.
+
+
+       version_software_vendor
+	      Defines  the  allowed software vendor string that is required to
+	      connect.	Usually this is  either  a  build  number  or  special
+	      client  tag. Using this requirement is not encouraged unless the
+	      server is in very limited use.  Leaving unset  allows  all  ver-
+	      sions  regardless of their vendor to connect.  Can be overridden
+	      with ConnectionParams.
+
+
+       key_exchange_rekey
+	      Defines the interval, in seconds, how often the session key will
+	      be regenerated. This setting only applies to the connection ini-
+	      tiator, as rekey is always performed by  the  initiating	party.
+	      Setting  has  effect  only when the server acts as an initiator,
+	      and can be overridden with ConnectionParams.
+
+
+       key_exchange_pfs
+	      Boolean value to determine, whether  key-exchange  is  performed
+	      with  Perfect  Forward Secrecy (PFS) or without. If set to true,
+	      the rekey process will be somewhat slower, but more secure since
+	      the  key is entirely regenerated. Can be overridden with Connec-
+	      tionParams.
+
+
+       key_exchange_timeout
+	      Key exchange timeout in seconds. If the key exchange is not com-
+	      pleted within this time, the remote connection will be closed.
+
+
+       conn_auth_timeout
+	      Connection  authentication timeout in seconds. If the connection
+	      authentication is not completed within  this  time,  the	remote
+	      connection will be closed.
+
+
+       channel_rekey_secs
+	      Seconds,	how  often  channel key will be regenerated. Note that
+	      channel key is regenerated each time someone joins or leaves the
+	      channel.	This is the maximum time any channel can have the same
+	      key.
+
+
+       detach_disabled
+	      Boolean value controlling, whether clients are denied the use of
+	      DETACH command. Default value is false (DETACH is allowed).
+
+
+       detach_timeout
+	      Time in seconds how long detached sessions will be available. By
+	      default, detached sessions do not expire and as such,  are  per-
+	      sistent  as  long as the server is running. If DETACH command is
+	      allowed, this value should be set as well.
+
+
+       qos
+	      Boolean value controlling, whether Quality of  Service  settings
+	      are  enabled.  Default setting is false. NOTE: If you enable QoS
+	      in general section, it applies to every  connection  the	server
+	      has, including server connections.  This setting can be overrid-
+	      den with ConnectionParams and in case of server connections,  it
+	      SHOULD BE overridden (server connections should not use QoS).
+
+
+       qos_rate_limit
+	      Limits  read operations per second to given amount. Do note that
+	      one read operation may read several SILC packets, so  this  set-
+	      ting  does  not  automatically  correspond to amount of messages
+	      transmitted or accepted.
+
+
+       qos_bytes_limit
+	      Limits incoming SILC data to the specified number of  bytes  per
+	      second.
+
+
+       qos_limit_sec
+	      This  value  defines  the  timeout, in seconds, for the delay of
+	      received data in case it was left in a QoS queue.
+
+
+       qos_limit_usec
+	      This value defines the timeout, in microseconds, for  the  delay
+	      of  received data for received data in case it was left in a QoS
+	      queue.
+
+
+
+SECTION: ServerInfo
+       ServerInfo contains values  for	bound  interfaces  and	administrative
+       info.
+
+       hostname
+	      Server's name (FQDN).
+
+
+       ServerType
+	      This  is	a  descriptive	text  field,  usually telling what the
+	      server and its purpose are.
+
+
+       Location
+	      Descriptive field of server's geographic location.
+
+
+       Admin
+	      Administrator's full name.
+
+
+       AdminEmail
+	      Administrator's email address.
+
+
+       User
+	      The name of the user account silcd will be running on. This must
+	      be  an  existing	user.  Silcd  needs to executed as root; after
+	      binding the port it  will  drop  root  privileges  and  use  the
+	      account given here.
+
+
+       Group
+	      The  name of the group silcd will be running on. This must be an
+	      existing group. Silcd needs to be executed as root; after  bind-
+	      ing  the	port  it  will	drop root privileges and use the group
+	      given here.
+
+
+       PublicKey
+	      Full path to server's public key file.
+
+
+       PrivateKey
+	      Full path to server's private key file.
+
+
+       MotdFile
+	      Full path to MOTD (Message Of The Day) file, a  text  file  that
+	      will be displayed to each client upon connection.
+
+
+       PidFile
+	      Full path to file where silcd will write its PID.
+
+
+
+SUBSECTION: Primary
+       This  is  the  primary listener info. Each server can have no more than
+       one Primary section.
+
+       ip
+	      Specifies the address silcd is listening on.
+
+
+       port
+	      Specifies the port silcd is listening on.
+
+
+       public_ip
+	      Optional field.  If your server is behind NAT this IP  would  be
+	      the  public IP address.  The 'ip' field would include the inter-
+	      nal IP address.  With this option it is possible	to  run  silcd
+	      behind NAT device.
+
+
+
+SUBSECTION: Secondary
+       This is a secondary listener info. A server may have any amount of Sec-
+       ondary listener settings. These are needed only if silcd needs to  lis-
+       ten on several interfaces. Secondary subsections have the same informa-
+       tion that Primary does.
+
+
+SECTION: Logging
+       This section is used to set up various log files; their paths,  maximum
+       sizes and individual logging options.
+
+       There  are  four  defined  logging  channels.  The log channels have an
+       importance value, and more important channels are always redirected  to
+       the  less  important  ones.  Setting a valid logging file for Info will
+       ensure logging for all channels, whereas a  setting  for  Errors  would
+       only ensure logging for Errors and Fatals.
+
+       Timestamp
+	      A  boolean value that dictates whether log lines will have time-
+	      stamps prefixed. In general, this is a good idea. You might want
+	      to disable this if you are running silcd under some special log-
+	      ging daemon, such as daemontools.
+
+
+       QuickLogs
+	      A boolean value that determines how often log files are updated.
+	      Setting  this to true makes silcd log in real-time. Setting this
+	      to false makes silcd write to  logs  every  FlushDelay  seconds.
+	      Real-time  logging  causes  a  bit  more	CPU  and HDD usage but
+	      reduces memory consumption.
+
+
+       FlushDelay
+	      Time in seconds, how often logs are flushed  to  logfiles.  This
+	      setting has effect only if QuickLogs is disabled.
+
+
+
+SUBSECTION: Info
+SUBSECTION: Warnings
+SUBSECTION: Errors
+SUBSECTION: Fatals
+       Each of these subsections has the same attributes, File and Size.  Dif-
+       ferent levels of problems  are  logged  to  their  respective  channels
+       (Info, Warnings, Errors, Fatals), depending on their need of attention.
+
+       File
+	      Full path to log file.
+
+
+       Size
+	      Limit the size the log file is allowed to grow to.  Any  further
+	      messages	to  this  file cause the oldest lines to be removed in
+	      order to keep the file size within given limit.
+
+
+
+SECTION: ConnectionParams
+       This section defines connection parameters. Each  connection  may  have
+       its  own set of ConnectionParams but having one is in no way mandatory.
+       If no separate parameters have been assigned, the defaults and the ones
+       from  General  section will be used. A silcd configuration may have any
+       number of ConnectionParams sections.
+
+       name
+	      This is a unique name that separates this particular Connection-
+	      Params  section  from  all  the others. It is also the name with
+	      which settings are referred to a given set of  parameters.  This
+	      field is mandatory.
+
+
+       connections_max
+	      Limits  how many concurrent connections are allowed. Any further
+	      connections are simply refused. Note that this setting  can  not
+	      override the figure given in General section.
+
+
+       connections_max_per_host
+	      Maximum  number  of connections allowed from any single host. If
+	      this parameter is set for a  block  controlling  server  connec-
+	      tions, it is highly suggested to use a value of one (1).
+
+
+       version_protocol
+	      Exactly the same as in General section.
+
+
+       version_software
+	      Exactly the same as in General section.
+
+
+       version_software_vendor
+	      Exactly the same as in General section.
+
+
+       keepalive_secs
+	      How  often  (seconds)  to  send  HEARTBEAT  packets to connected
+	      clients.
+
+
+       reconnect_count
+	      When connection is lost, how many times a reconnection is tried.
+
+
+       reconnect_interval
+	      How often, in seconds, a reconnection is attempted.
+
+
+       reconnect_interval_max
+	      Reconnection  time  is  lengthened  each	time  an  unsuccessful
+	      attempt occurs. This value defines the maximum interval to which
+	      the delay may be prolonged.
+
+
+       reconnect_keep_trying
+	      Boolean  value  controlling  whether  server eventually gives up
+	      trying to reconnect. If set to false, server will give  up  once
+	      reconnect_count  is reached or, even at maximum interval no con-
+	      nection is established.
+
+
+       key_exchange_rekey
+	      Exactly the same as in General section.
+
+
+       key_exchange_pfs
+	      Exactly the same as in General section.
+
+
+       anonymous
+	      This boolean setting has meaning only to client connections.  If
+	      set  to  true,  client  connections  using this ConnectionParams
+	      block will have their username and host  scrambled.  The	client
+	      will also have an anonymous mode set to it.
+
+
+       qos
+	      Exactly the same as in General section  NOTE: For server connec-
+	      tion this should be set to false value.
+
+
+       qos_rate_limit
+	      Exactly the same as in General section.
+
+
+       qos_bytes_limit
+	      Exactly the same as in General section.
+
+
+       qos_limit_sec
+	      Exactly the same as in General section.
+
+
+       qos_limit_usec
+	      Exactly the same as in General section.
+
+
+
+SECTION: Client
+       This section defines how incoming client connections are handled. There
+       can  be	several  Client  sections, each with their own requirements. A
+       silcd admin could for example require  that  connections  from  certain
+       IP-address space must supply a connection password.
+
+       Host
+	      An  address  or  wildcarded  set of addresses, either in numeric
+	      IP-address fashion or as	hostnames.  For  example  "10.1.*"  or
+	      "*.mydomain.domain.org".
+
+
+       Passphrase
+	      The required passphrase to allow client connection.
+
+
+       PublicKey
+	      The path to a file containing the client's public key. There can
+	      be any number of PublicKey statements  in  one  Client  section.
+	      Matching any of them will do.
+
+
+       Params
+	      Name of client connection parameters.
+
+
+
+SECTION: ServerConnection
+       This  section  defines  a  configured server connection. A regular SILC
+       server does not need one at all. If this block exists,  it  means  that
+       the  server  is	a  SILC router. There must be one ServerConnection for
+       each SILC server that connects to this router.
+
+       Host
+	      Either an FQDN or strict IP-address of the connecting server.
+
+
+       Passphrase
+	      If server connection requires passphrase authentication, set  it
+	      here.
+
+
+       PublicKey
+	      This is a path to connecting server's public key. If server con-
+	      nection requires public key authentication, set this  value.  If
+	      both  Passphrase and PublicKey are set, then either of them will
+	      be accepted.
+
+
+       Params
+	      Connection parameters.
+
+
+       Backup
+	      A boolean value  controlling  whether  this  server  acts  as  a
+	      backup.  Set  to	false for normal servers. If set to true, this
+	      server is a backup router.
+
+
+
+SECTION: RouterConnection
+       This section covers router connections. Stand-alone servers won't  have
+       this section, and regular servers should only have one.
+
+       Router  servers	need  one  RouterConnection for each other router they
+       have been configured to connect to. First  configured  section  is  the
+       primary route.
+
+       Port
+	      If  Initiator  is  set tro true, this setting defines the remote
+	      port in which to connect. if Initiator is  set  to  false,  then
+	      this defines the local (listening) port.
+
+
+       Passphrase
+	      If connecting server requires a passphrase authentication, it is
+	      set here.
+
+
+       PublicKey
+	      If connecting to server requires public key authentication,  the
+	      path to server's public key file is set here.
+
+
+       Params
+	      Connection parameters.
+
+
+       Initiator
+	      A  boolean  setting that defines whether this server is the con-
+	      necting party.
+
+
+       BackupHost
+	      If the configured connection is a backup connection, set this to
+	      the address of the main router that will be replaced. For normal
+	      router connection leave this option out.
+
+
+       BackupPort
+	      If the configured connection is a backup connection, set this to
+	      the  remote  port which to connect to. For normal router connec-
+	      tion, leave this option out.
+
+
+       BackupLocal
+	      A boolean value. If this setting is true, then the backup router
+	      is  in  the  same cell. If the backup router is in another cell,
+	      set this to false. Needless to say, for  normal  router  connec-
+	      tion, leave this option out.
+
+
+
+SECTION: Admin
+       This section defines configured administration connections.
+
+       Host
+	      Either  FQDN or a strict IP-address to the origin of connection.
+	      This field is optional.
+
+
+       User
+	      Username that the connecting client  announces.  This  field  is
+	      optional.
+
+
+       Nick
+	      Nickname	that  the  connecting  client announces. This field is
+	      optional.
+
+
+       Passphrase
+	      Passphrase required to obtain server operator privileges.
+
+
+       PublicKey
+	      Path to administrator's public key file. If both Passphrase  and
+	      PublicKey are defined, either one can be used.
+
+
+
+SECTION: Deny
+       This section defines denied incoming connections. They apply equally to
+       both client and server connections, so make sure you know what you  add
+       here.  Each  Deny  section covers one instance of denied connection(s).
+       There may be any number of Deny sections.
+
+       Host
+	      Address or wildcarded addresses  of  denied  connections.  NOTE!
+	      This  field  is  not  mandatory,	but highly recommended. If you
+	      don't specify Host at all, or give it a value of "*", you have a
+	      silcd that denies every single incoming connection.
+
+
+       Reason
+	      A string giving the reason as to why the connecting party is not
+	      allowed to connect. Unlike Host, this field IS mandatory.
+
+
+
+FILES
+       silcd.conf
+
+
+SEE ALSO
+       silcd(8)
+
+
+AUTHOR
+       SILC is designed and written by Pekka  Riikonen	<priikone@iki.fi>  and
+       rest of the SILC Project.
+
+       Configuration  file  format  and  parser  is by Giovanni Giacobbi <gio-
+       vanni@giacobbi.net>.
+
+       This manpage was written by Mika 'Bostik' Bostrom <bostik@lut.fi>
+
+       See CREDITS for full list of contributors.
+
+
+
+silc-server			November 2 2002 		 SILCD_CONF(5)

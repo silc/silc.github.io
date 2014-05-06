@@ -1,0 +1,356 @@
+commit bd463a75d37dd2ec164dc14dee4bb2550d6a778a
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon May 5 13:53:08 2014 +0300
+
+    silcclient: check packet type as responder before starting AKE
+    
+    Do not immediately start the private message key autonegotiation as
+    responder when a packet comes in but wait until it is decoded from the
+    private message payload so that responder can properly set up the SKE
+    properties and start the SKE in proper state.  Initiator is allowed to
+    start SKE with SILC_PACKET_KEY_EXCHANGE at any time, including when a key
+    already exists and it would be error to expect that initiator should have
+    sent SILC_PACKET_KEY_EXCHANGE_1 just because key exists in responder side.
+
+commit c849f909fc98a2460ffc1c7becf17b7417e391e7
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon May 5 11:23:48 2014 +0300
+
+    Fix compilation warnings
+
+commit b7c5d77228c07bf2974e986c362e5fb0014f9fff
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon May 5 11:24:08 2014 +0300
+
+    silc-toolkit: rpm packaging updates
+
+commit 0c5b4cf8af092fd6c3d3d4cd03efd299c7020cc1
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 29 10:56:24 2014 +0300
+
+    SKE: handle invalid protocol state errors
+    
+    With SKE over UDP we can receive packets in wrong order or do
+    retransmissions but in TCP receiving wrong SKE packet at wrong time is
+    a protocol error and must result to end of the key exchange.
+
+commit fb7bc4b5172fd6fa0ae96f876a33cd2ec5139b6e
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 23:00:02 2014 +0300
+
+    Bump version numbers
+    
+    Bump library version numbers, API has changed.
+
+commit 80d10dbf48785c2163551a7f94a46f6f5849c4a7
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:59:28 2014 +0300
+
+    silcclient: auto-negotiation of private message key using SKE over SILCnet
+    
+    Previously in SILC private messages have been protected in normal mode
+    using the session key shared between the client and server and other
+    servers in the network.  This obviously has security implications if
+    the SILC servers cannot be trusted.
+    
+    To overcome this issue silcclient library has offered user the ability to
+    use pre-shared key (or password) as the secret key to protect private
+    message, or to negotiate fresh key material using SKE peer-to-peer over
+    the internet (key agreement).
+    
+    However, both of these feature have severe limitations.  The first one
+    requiring coordinated effort to somehow share the key or password and
+    the second requiring peer-to-peer connection which may not be possible
+    due to NAT and firewalls.
+    
+    This commit adds a new private message protection method and takes it
+    into use as the default protection method.  The commits adds support
+    for automatic negotiation of the private message key using SKE but instead
+    of doing it peer-to-peer over the internet it is done client-to-client
+    over the SILC network itself.  This is accomplished by tunneling the
+    SKE protocol inside private message packets.  As SKE is safe over the
+    unprotected and untrusted internet it is safe also over the SILC network.
+    
+    The end result of the auto-negotiation is a shared secret known only
+    to the two clients.  The SKE provides mutual authentication with digital
+    signatures to prevent man-in-the-middle attack.  The private messages
+    protected with this key can be read only by the two clients.  SILC servers
+    along the way cannot decrypt them.  The key is periodically re-keyed
+    (5 minutes or so) and it provides Perfect Forward Secrecy.
+    
+    The auto-negotiation is enabled by default.  It can detect within seconds
+    if the remote client supports the method and if it doesn't it gives a
+    notification that the private message protection has been reverted back
+    to session keys.  Application can disable the feature, if wanted.
+    
+    This feature does not require any changes to SILC servers.
+
+commit d7f1e81fea0d1da2ac870b8dfa600669aa280cd5
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:43:44 2014 +0300
+
+    silcclient: fix packet stream coder function
+    
+    Generate correct FTP packet after, after the packet stream coder function
+    semantics changed in commit 705167687caeaa66c371dce7cc88719687337b9e.
+
+commit 77774e96ef3f5011bb85f7e0ec68a7f3a4a4d6e8
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:42:43 2014 +0300
+
+    silcclient: Add generic client entry operation context
+    
+    Add generic client entry async operation context to the internal
+    context.  Change the key agreement to start using it.
+    
+    Add support for aborting client entry operations when the client entry
+    is deleted or when the connection is closed to the server.
+
+commit 7f26bf8964b7269f9a9f295afdff1b870ecc68e2
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:39:06 2014 +0300
+
+    SKE: support for simplified key exchange
+    
+    This commit adds support for simplified SILC Key Exchange protocol by
+    allowing the caller to specify the security properties to be used in
+    the key exchange.  This will stop the library from exchanging the
+    SILC_PACKET_KEY_EXCHANGE packet containing the properties.
+    
+    Support for not sending the SILC_PACKET_SUCCESS acks after a successful
+    key exchange.
+    
+    These two changes allow the SKE to be simplified to exchanging only
+    the SILC_PACKET_KEY_EXHANGE_1 and SILC_PACKET_KEY_EXCHANGE_2 packets
+    to produce the shared key and to do mutual authentication.
+    
+    The commit also adds support for generating small proposals in
+    SILC_PACKET_KEY_EXCHANGE packet by including only one security property
+    per item instead of listing all of them in the proposal.
+    
+    Additionally the commit adds support for probe timeout which affects
+    the first packet sent by initiator.  If responder does not respond to
+    the first packet in the specified timeframe the key exchange will
+    timeout.  If it replies the normal key exchange timeout has effect after
+    that.
+
+commit 705167687caeaa66c371dce7cc88719687337b9e
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:31:35 2014 +0300
+
+    silccore: packet injection and stream wrap improvements
+    
+    Add silc_packet_stream_inject to allow injecting of packets to the
+    specified packet stream.
+    
+    Add support for specifying the source and destination ids for the
+    wrapped packet stream allowing to use them in packet sending and using
+    them in packet reception to take only packets with the specified ids.
+    
+    The semantics of CAN_WRITE and CAN_READ of wrapped packet stream coder
+    function has been changed to allow the coder to filter out packets it
+    does not want or to handle errors in coding.
+
+commit 2d1796c19aaf7b3e1f07f95e0271e64fdea1da2f
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 21:55:33 2014 +0300
+
+    Robodoc compilation update
+    
+    Update robodoc compilation.
+
+commit 39e99da8fc2c49fe989ef50b040866f735fefd5b
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Sun Apr 27 10:48:43 2014 +0300
+
+    Use backtrace() in stack tracing for prettier output
+    
+    This commit takes the backtrace() call in use to produce stack trace
+    outputs, plus it gives us x86-64 support for stack trace.
+
+commit 2559c5da3d5353f97f16b387bff02373b258a3df
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Sun Apr 27 10:38:34 2014 +0300
+
+    Static analyzer fixes
+    
+    More small fixes resulting from clang static analysis.
+
+commit 644f8b14010e05d55b5cde8514f6efdca8c21c5b
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 22 15:29:07 2014 +0300
+
+    Enable higher security messages MACs
+    
+    The code to include the source and destination ID in the message payload
+    MAC has been there for a long time but the use of it has been disabled.
+    This commit enables it but preserves the backwards support for those
+    clients unable to verify the MACs.  The support for the newer MACs
+    have been there for several years.
+
+commit e7ecca35b79220f947ae30c98f80688db1d2a101
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 22 15:26:55 2014 +0300
+
+    Remove obsolete backwards support code
+    
+    Remove the old zero-client id backwards support when starting SKE protocol.
+
+commit 40df0fe9d2a0a7648a111ca03de16f7a740cf5ad
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 22 15:25:37 2014 +0300
+
+    Longer default PKCS keys
+    
+    This commit changes the default PKCS key length from 2048 bits to 4096
+    bits.  It adds warnings to both SILC client and SILC server in start up
+    in case the existing key is shorter than 4096 to encourage people to
+    generate new key longer key pair.
+    
+    This commit also changes the default SKE DH group from 1024 to 1536 bits.
+    The old group is still supported.
+
+commit d4ead7075692a4abdc487fcb422cb9fd5b41a596
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 22 15:22:38 2014 +0300
+
+    Static analyzer bug fixes
+    
+    Bunch of small bugs fixed here and there found during static analysis.
+
+commit f38b21315fc72df3914664227ebcece766f01f66
+Author: Pekka Riikonen <priikone@Pekkas-MacBook-Air.local>
+Date:   Fri Jun 22 22:21:38 2012 +0300
+
+    Mac OS X >= 10.7 support
+    
+    Add support for compiling on Mac OS X > 10.7 and newer.  Summary of
+    changes:
+    
+     - Remove config.guess and config.sub, let the autodist copy proper
+       versions from the system.
+    
+     - Add support for autoconfg 2.68 and newer.
+    
+     - Add support for compiing x86-64 AES code with NASM.
+    
+     - Update Mac OS X installation instructions.
+
+commit 27a4ad25c65fa7b4fdbbe53b3551a687a9b43214
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue May 25 07:24:28 2010 +0300
+
+    Client: Fix signature verification double free
+    
+    When client receives public key in the message payload and is compared
+    against the client's own public key, when the keys differ we have to
+    return immediately and not try to verify the signature.
+
+commit a2f2afc03242a6f8b77953203f8e3767a6e703c4
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue May 11 07:44:09 2010 +0300
+
+    Packet engine: prevent divide by 0
+
+commit 5fff0bf9cd2c72027c9f42f2e60b415ba4848ae6
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue May 11 07:41:03 2010 +0300
+
+    SKE: Make sure failure received from remote is error status.
+
+commit bb61286f7ac90ebcdaa9b00991a9a98b6cd8663f
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Fri Sep 25 12:07:41 2009 +0300
+
+    Set SO_KEEPALIVE for all accept()ed sockets.
+
+commit 80bb7b35c2a1f44702631f1a5cf5685d5ce4b2c7
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Fri Sep 25 12:06:45 2009 +0300
+
+    clientlib: Close connection after failed rekey
+
+ .cvsignore => .gitignore                           |   18 +
+ INSTALL                                            |    3 +
+ README                                             |  114 +-
+ README.MACOSX                                      |   33 +-
+ TODO                                               |  304 +-
+ config.guess                                       | 1471 -----
+ config.sub                                         | 1599 -----
+ configure.ad                                       |   62 +-
+ distdir/pre-run                                    |    2 +-
+ lib/Makefile.ad                                    |    8 +-
+ lib/configure.ad                                   |   16 +-
+ lib/contrib/nfkc.c                                 |    3 +
+ lib/doc/LIBINDEX                                   |    2 +-
+ lib/silcapputil/silcapputil.c                      |    4 +-
+ lib/silcapputil/silcapputil.h                      |    2 +-
+ lib/silcasn1/silcasn1.c                            |    4 +-
+ lib/silcasn1/silcasn1_decode.c                     |    2 +-
+ lib/silcasn1/silcasn1_encode.c                     |    2 +-
+ lib/silcclient/client.c                            |   27 +-
+ lib/silcclient/client.h                            |   11 +-
+ lib/silcclient/client_attrs.c                      |    2 +-
+ lib/silcclient/client_channel.c                    |   20 +-
+ lib/silcclient/client_connect.c                    |   14 +-
+ lib/silcclient/client_entry.c                      |   22 +-
+ lib/silcclient/client_ftp.c                        |   17 +-
+ lib/silcclient/client_internal.h                   |    6 +-
+ lib/silcclient/client_keyagr.c                     |   32 +-
+ lib/silcclient/client_listener.c                   |    2 +-
+ lib/silcclient/client_notify.c                     |    2 +-
+ lib/silcclient/client_prvmsg.c                     |  720 ++-
+ lib/silcclient/client_prvmsg.h                     |   12 +-
+ lib/silcclient/client_register.c                   |    2 +-
+ lib/silcclient/command_reply.c                     |   12 +-
+ lib/silcclient/silcclient.h                        |   24 +-
+ lib/silcclient/tests/test_silcclient.c             |    4 +-
+ lib/silccore/silcargument.c                        |    2 -
+ lib/silccore/silcattrs.c                           |    9 +-
+ lib/silccore/silcauth.c                            |    2 +-
+ lib/silccore/silcmessage.c                         |   21 +-
+ lib/silccore/silcmessage.h                         |    5 +-
+ lib/silccore/silcpacket.c                          |  145 +-
+ lib/silccore/silcpacket.h                          |   60 +-
+ lib/silccore/tests/test_silcmessage.c              |    4 +-
+ lib/silccrypt/aes.c                                |   18 +-
+ lib/silccrypt/aes_x86_64.asm                       |    8 +-
+ lib/silccrypt/md5.c                                |    2 +-
+ lib/silccrypt/silccipher.c                         |    3 +-
+ lib/silccrypt/silchash.c                           |    3 +-
+ lib/silccrypt/silchmac.c                           |    3 +-
+ lib/silccrypt/silcpk.h                             |    4 +-
+ lib/silccrypt/silcpkcs.c                           |    3 +-
+ lib/silccrypt/silcpkcs1.c                          |   32 +-
+ lib/silccrypt/silcrng.c                            |   18 +-
+ lib/silccrypt/tests/test_silcpkcs.c                |    4 +-
+ lib/silccrypt/twofish.c                            |    2 +-
+ lib/silchttp/silchttpserver.c                      |    3 +
+ lib/silcmath/mp_gmp.c                              |    3 +-
+ lib/silcmath/mp_tfm.c                              |    3 +-
+ lib/silcmath/mp_tma.c                              |    3 +-
+ lib/silcmath/silcmp.h                              |    2 +-
+ lib/silcmath/tma.c                                 |    5 +
+ lib/silcserver/tests/test_silcserver.c             |    2 +-
+ lib/silcsftp/sftp_fs_memory.c                      |    2 +
+ lib/silcske/groups.c                               |   44 +-
+ lib/silcske/payload.c                              |   11 +-
+ lib/silcske/silcske.c                              |  531 +-
+ lib/silcske/silcske.h                              |   23 +-
+ lib/silcske/silcske_groups.h                       |    7 +-
+ lib/silcske/silcske_i.h                            |    4 +-
+ lib/silcutil/Makefile.ad                           |    2 -
+ lib/silcutil/silcbuffmt.c                          |    4 +-
+ lib/silcutil/silcfileutil.c                        |    2 +-
+ lib/silcutil/silcmemory.h                          |    4 -
+ lib/silcutil/silcmime.c                            |    5 +-
+ lib/silcutil/silcnet.c                             |   54 +-
+ lib/silcutil/silcschedule.c                        |    9 +-
+ lib/silcutil/silctime.c                            |    8 +-
+ lib/silcutil/stacktrace.c                          |   58 +-
+ lib/silcutil/unix/silcunixnet.c                    |    1 +
+ silc-toolkit.spec.in                               |  250 +-
+ 179 files changed, 15541 insertions(+), 8210 deletions(-)
+ rename .cvsignore => .gitignore (70%)
+ delete mode 100755 config.guess
+ delete mode 100755 config.sub

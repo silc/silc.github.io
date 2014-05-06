@@ -1,0 +1,213 @@
+commit f2deb55ad9290c1d13fa33b3a3cb3dac9318b28e
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon May 5 11:40:55 2014 +0300
+
+    silc-server: rpm packaging updates
+
+commit 46f0bec9f20c9914bb333ec6b1247e5dc2a04199
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Sun May 4 18:13:45 2014 +0300
+
+    silcd: allow ServerType, Location, Admin and AdminEmail to be empty
+
+commit 83656203e4a4c5d3e2d63785f8ecb7de0dd5ae0b
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Sun May 4 17:59:06 2014 +0300
+
+    Example silcd.conf file that connects to sauna.silcnet.org directly.
+
+commit 0c5b4cf8af092fd6c3d3d4cd03efd299c7020cc1
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 29 10:56:24 2014 +0300
+
+    SKE: handle invalid protocol state errors
+    
+    With SKE over UDP we can receive packets in wrong order or do
+    retransmissions but in TCP receiving wrong SKE packet at wrong time is
+    a protocol error and must result to end of the key exchange.
+
+commit 581d2aecadb68f43e70691001d772fe46b459e24
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 23:00:55 2014 +0300
+
+    silcd: show MAC in welcome notifys
+    
+    Shoe cipher and MAC currently in use in the welcome messages servers sends
+    to client.
+
+commit 7f26bf8964b7269f9a9f295afdff1b870ecc68e2
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:39:06 2014 +0300
+
+    SKE: support for simplified key exchange
+    
+    This commit adds support for simplified SILC Key Exchange protocol by
+    allowing the caller to specify the security properties to be used in
+    the key exchange.  This will stop the library from exchanging the
+    SILC_PACKET_KEY_EXCHANGE packet containing the properties.
+    
+    Support for not sending the SILC_PACKET_SUCCESS acks after a successful
+    key exchange.
+    
+    These two changes allow the SKE to be simplified to exchanging only
+    the SILC_PACKET_KEY_EXHANGE_1 and SILC_PACKET_KEY_EXCHANGE_2 packets
+    to produce the shared key and to do mutual authentication.
+    
+    The commit also adds support for generating small proposals in
+    SILC_PACKET_KEY_EXCHANGE packet by including only one security property
+    per item instead of listing all of them in the proposal.
+    
+    Additionally the commit adds support for probe timeout which affects
+    the first packet sent by initiator.  If responder does not respond to
+    the first packet in the specified timeframe the key exchange will
+    timeout.  If it replies the normal key exchange timeout has effect after
+    that.
+
+commit 705167687caeaa66c371dce7cc88719687337b9e
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Mon Apr 28 22:31:35 2014 +0300
+
+    silccore: packet injection and stream wrap improvements
+    
+    Add silc_packet_stream_inject to allow injecting of packets to the
+    specified packet stream.
+    
+    Add support for specifying the source and destination ids for the
+    wrapped packet stream allowing to use them in packet sending and using
+    them in packet reception to take only packets with the specified ids.
+    
+    The semantics of CAN_WRITE and CAN_READ of wrapped packet stream coder
+    function has been changed to allow the coder to filter out packets it
+    does not want or to handle errors in coding.
+
+commit 2559c5da3d5353f97f16b387bff02373b258a3df
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Sun Apr 27 10:38:34 2014 +0300
+
+    Static analyzer fixes
+    
+    More small fixes resulting from clang static analysis.
+
+commit 40df0fe9d2a0a7648a111ca03de16f7a740cf5ad
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 22 15:25:37 2014 +0300
+
+    Longer default PKCS keys
+    
+    This commit changes the default PKCS key length from 2048 bits to 4096
+    bits.  It adds warnings to both SILC client and SILC server in start up
+    in case the existing key is shorter than 4096 to encourage people to
+    generate new key longer key pair.
+    
+    This commit also changes the default SKE DH group from 1024 to 1536 bits.
+    The old group is still supported.
+
+commit d4ead7075692a4abdc487fcb422cb9fd5b41a596
+Author: Pekka Riikonen <priikone@silcnet.org>
+Date:   Tue Apr 22 15:22:38 2014 +0300
+
+    Static analyzer bug fixes
+    
+    Bunch of small bugs fixed here and there found during static analysis.
+
+commit f38b21315fc72df3914664227ebcece766f01f66
+Author: Pekka Riikonen <priikone@Pekkas-MacBook-Air.local>
+Date:   Fri Jun 22 22:21:38 2012 +0300
+
+    Mac OS X >= 10.7 support
+    
+    Add support for compiling on Mac OS X > 10.7 and newer.  Summary of
+    changes:
+    
+     - Remove config.guess and config.sub, let the autodist copy proper
+       versions from the system.
+    
+     - Add support for autoconfg 2.68 and newer.
+    
+     - Add support for compiing x86-64 AES code with NASM.
+    
+     - Update Mac OS X installation instructions.
+
+ .cvsignore => .gitignore                           |   18 +
+ INSTALL                                            |    3 +
+ README                                             |  114 +-
+ README.MACOSX                                      |   33 +-
+ TODO                                               |  304 +-
+ apps/silcd/command.c                               |  174 +-
+ apps/silcd/command_reply.c                         |   12 +-
+ apps/silcd/idlist.c                                |   12 +
+ apps/silcd/packet_receive.c                        |   19 +-
+ apps/silcd/packet_send.c                           |   20 +-
+ apps/silcd/server.c                                |   74 +-
+ apps/silcd/server.h                                |    6 +-
+ apps/silcd/server_backup.c                         |   33 +-
+ apps/silcd/server_internal.h                       |    1 +
+ apps/silcd/server_query.c                          |    8 +-
+ apps/silcd/server_util.c                           |    9 +-
+ apps/silcd/server_util.h                           |   14 +-
+ apps/silcd/serverconfig.c                          |   21 +-
+ apps/silcd/serverid.c                              |    4 +
+ apps/silcd/silc-server.spec.in                     |    4 +-
+ apps/silcd/silcd.c                                 |   38 +-
+ config.guess                                       | 1471 -----
+ config.sub                                         | 1599 -----
+ configure.ad                                       |   64 +-
+ distdir/pre-run                                    |    2 +-
+ doc/example_silcd.conf.in                          |   34 +-
+ lib/Makefile.ad                                    |    8 +-
+ lib/configure.ad                                   |   16 +-
+ lib/contrib/nfkc.c                                 |    3 +
+ lib/doc/LIBINDEX                                   |    2 +-
+ lib/silcapputil/silcapputil.c                      |    4 +-
+ lib/silcapputil/silcapputil.h                      |    2 +-
+ lib/silcasn1/silcasn1.c                            |    4 +-
+ lib/silcasn1/silcasn1_decode.c                     |    2 +-
+ lib/silcasn1/silcasn1_encode.c                     |    2 +-
+ lib/silccore/silcargument.c                        |    2 -
+ lib/silccore/silcattrs.c                           |    9 +-
+ lib/silccore/silcauth.c                            |    2 +-
+ lib/silccore/silcmessage.c                         |   21 +-
+ lib/silccore/silcmessage.h                         |    5 +-
+ lib/silccore/silcpacket.c                          |  145 +-
+ lib/silccore/silcpacket.h                          |   60 +-
+ lib/silccore/tests/test_silcmessage.c              |    4 +-
+ lib/silccrypt/aes.c                                |   18 +-
+ lib/silccrypt/aes_x86_64.asm                       |    8 +-
+ lib/silccrypt/md5.c                                |    2 +-
+ lib/silccrypt/silccipher.c                         |    3 +-
+ lib/silccrypt/silchash.c                           |    3 +-
+ lib/silccrypt/silchmac.c                           |    3 +-
+ lib/silccrypt/silcpk.h                             |    4 +-
+ lib/silccrypt/silcpkcs.c                           |    3 +-
+ lib/silccrypt/silcpkcs1.c                          |   32 +-
+ lib/silccrypt/silcrng.c                            |   18 +-
+ lib/silccrypt/tests/test_silcpkcs.c                |    4 +-
+ lib/silccrypt/twofish.c                            |    2 +-
+ lib/silchttp/silchttpserver.c                      |    3 +
+ lib/silcmath/mp_gmp.c                              |    3 +-
+ lib/silcmath/mp_tfm.c                              |    3 +-
+ lib/silcmath/mp_tma.c                              |    3 +-
+ lib/silcmath/silcmp.h                              |    2 +-
+ lib/silcmath/tma.c                                 |    5 +
+ lib/silcserver/tests/test_silcserver.c             |    2 +-
+ lib/silcsftp/sftp_fs_memory.c                      |    2 +
+ lib/silcske/groups.c                               |   44 +-
+ lib/silcske/payload.c                              |   11 +-
+ lib/silcske/silcske.c                              |  531 +-
+ lib/silcske/silcske.h                              |   23 +-
+ lib/silcske/silcske_groups.h                       |    7 +-
+ lib/silcske/silcske_i.h                            |    4 +-
+ lib/silcutil/Makefile.ad                           |    2 -
+ lib/silcutil/silcbuffmt.c                          |    4 +-
+ lib/silcutil/silcfileutil.c                        |    2 +-
+ lib/silcutil/silcmemory.h                          |    4 -
+ lib/silcutil/silcmime.c                            |    5 +-
+ lib/silcutil/silcnet.c                             |   54 +-
+ lib/silcutil/silcschedule.c                        |    9 +-
+ lib/silcutil/silctime.c                            |    8 +-
+ lib/silcutil/stacktrace.c                          |   58 +-
+ lib/silcutil/unix/silcunixnet.c                    |    1 +
+ 180 files changed, 15547 insertions(+), 8216 deletions(-)
+ rename .cvsignore => .gitignore (70%)
+ delete mode 100755 config.guess
+ delete mode 100755 config.sub
