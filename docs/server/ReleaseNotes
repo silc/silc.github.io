@@ -1,0 +1,8 @@
+SILC Server 1.1.19
+==================
+
+This version fixes many many small bugs, some of them potentially
+crashbugs, found using static analysis tools.
+
+This version also increases the default public key algorithm length
+to 4096 bits.
