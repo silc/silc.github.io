@@ -144,6 +144,12 @@ code {
 	font-size: 18px;
 }
 
+.list {
+	width: 70%;
+	text-align: left;
+	font-size: 80%;
+}
+
 .downloadbutton {
 	display: inline-block;
 	color: #fff !important;
