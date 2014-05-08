@@ -1,0 +1,37 @@
+SILC Toolkit 1.1.11
+===================
+
+This version introduces a new default private message key protection
+method by auto-negotiating private message key with SILC Key Exchange
+protocol over the SILC network, client-to-client.  The SKE is executed
+by encapsulating it inside private messages.  SKE results into secret
+shared key between the two clients and all private messages are protected
+with that key.  This provides complete end-to-end protection for private
+messages even if the SILC servers cannot be trusted.
+
+SILC Client Library will auto-negotiate the key when private message is
+sent for the first time.  Both users will be prompted to accept each others
+public keys and once accpeted they are cached and subsequent verification
+will be done automatically.
+
+SILC Client Library automatically detects, within seconds, if the remote
+client does not support the new method.  User will receive a notification
+on screen telling that the private messages will be protected using normal
+session keys instead.  This may happen also if an error occurs during
+the key exchange protocol.
+
+This feature is totally transparent and applications usually will not
+require any changes to get it working.  For most cases it should work
+out of the box without modifications to the application.
+
+This version also adds a new say() client operation associated context
+which can be fetched from the SilcClientConnection entry.  The associated
+context can be SilcClientEntry, SilcChannelEntry or SilcServerEntry and
+is meant to allow application to better target the say() operation.
+
+This version also enables higher security message payloads by including
+the Client Ids in the MAC computation.  Support for this has existed for
+long time but it is now finally enabled.
+
+This version also adds various improvement to the SILC Key Exchange
+Library and the SILC Core Library.
