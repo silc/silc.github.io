@@ -1,5 +1,16 @@
-SILC Toolkit 1.1.11
-===================
+SILC Toolkit 1.1.12 2014-05-13
+==============================
+
+This version adds support for associating the client or server entry
+with the public key verification callback allowing application to
+show more information about the entity whose public key it is
+verifying.
+
+This version also fixes some minor bugs.
+
+
+SILC Toolkit 1.1.11 2014-05-06
+==============================
 
 This version introduces a new default private message key protection
 method by auto-negotiating private message key with SILC Key Exchange

@@ -193,9 +193,9 @@ automatically generated links to that list. -->
       void *callback_context;              /* Connection context */
       <A HREF="silcclient-SilcClient.html">SilcClient</A> client;                   /* Pointer back to <A HREF="silcclient-SilcClient.html">SilcClient</A> */
     
-      /* Current say() operation associated context, identifies the client,
-         channel or server the message is related to.  Application can use
-         this information to target the message better. */
+      /* Current say() or verify_public_key() operation associated context,
+         identifies the client, channel or server the operation is related to.
+         Application can use this information to target the operation better. */
       union {
         <A HREF="silcclient_entry-SilcClientEntry.html">SilcClientEntry</A> client_entry;
         <A HREF="silcclient_entry-SilcChannelEntry.html">SilcChannelEntry</A> channel_entry;

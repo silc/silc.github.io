@@ -181,8 +181,9 @@ automatically generated links to that list. -->
          The application can for example filter the message according the
          type.  The variable argument list is arguments to the formatted
          message `msg'.  A <A HREF="silcclient_entry-SilcClientEntry.html">SilcClientEntry</A>, <A HREF="silcclient_entry-SilcChannelEntry.html">SilcChannelEntry</A> or <A HREF="silcclient_entry-SilcServerEntry.html">SilcServerEntry</A>
-         can be associated with the message inside the `conn' by the library,
-         and application may use it to better target the message. */
+         can be associated with the message inside the <A HREF="silcclient-SilcClientConnection.html">SilcClientConnection</A>
+         by the library, and application may use it to better target the
+         message. */
       void (*say)(<A HREF="silcclient-SilcClient.html">SilcClient</A> client, <A HREF="silcclient-SilcClientConnection.html">SilcClientConnection</A> conn,
                   <A HREF="silcclient-SilcClientMessageType.html">SilcClientMessageType</A> type, char *msg, ...);
     
@@ -265,7 +266,9 @@ automatically generated links to that list. -->
          entity (server or client) has sent the public key. If user decides to
          trust the key the application may save the key as trusted public key for
          later use. The `completion' must be called after the public key has
-         been verified. */
+         been verified.  A <A HREF="silcclient_entry-SilcClientEntry.html">SilcClientEntry</A> or <A HREF="silcclient_entry-SilcServerEntry.html">SilcServerEntry</A> can be associated
+         with this request inside the <A HREF="silcclient-SilcClientConnection.html">SilcClientConnection</A> by the library, and
+         application may use it to better target the verification request. */
       void (*verify_public_key)(<A HREF="silcclient-SilcClient.html">SilcClient</A> client, <A HREF="silcclient-SilcClientConnection.html">SilcClientConnection</A> conn,
                                 <A HREF="silcconnauth-SilcConnectionType.html">SilcConnectionType</A> conn_type,
                                 <A HREF="silcpkcs-SilcPublicKey.html">SilcPublicKey</A> public_key,

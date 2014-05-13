@@ -1,407 +1,347 @@
-commit b953803ae59ea3e66e3ed799b90dbb66a9002fce
+commit 2a31f791df84e58f25f694cc17fb4631e544a7a4
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue May 6 12:24:10 2014 +0300
+Date:   Mon May 12 22:16:44 2014 +0300
 
-    silc-client: handle prompt abort better
+    silc-client: SILC Plugin compilation changes
     
-    When verfying public key abort any previously ungoing prompt so that we
-    can get the public key verification prompt up.  It's important to not
-    loose the public key verification prompts so we now allow new prompt to
-    come up after previous one has aborted.  It leaks Irssi memory, but
-    handles things correctly towards silcclient library.  Irssi's prompt
-    handling is broken because it stores the data in a global variable
-    allowing only one prompt at a time.
+    Update the README.PLUGIN instructions and include the silc-mime.pl
+    script in installation.
 
-commit bd463a75d37dd2ec164dc14dee4bb2550d6a778a
+commit ac05bae6310bc7cba3bc07f4c1ee309153e26ebd
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon May 5 13:53:08 2014 +0300
+Date:   Mon May 12 15:53:16 2014 +0300
 
-    silcclient: check packet type as responder before starting AKE
-    
-    Do not immediately start the private message key autonegotiation as
-    responder when a packet comes in but wait until it is decoded from the
-    private message payload so that responder can properly set up the SKE
-    properties and start the SKE in proper state.  Initiator is allowed to
-    start SKE with SILC_PACKET_KEY_EXCHANGE at any time, including when a key
-    already exists and it would be error to expect that initiator should have
-    sent SILC_PACKET_KEY_EXCHANGE_1 just because key exists in responder side.
+    silc-client: fix compilation error
 
-commit c849f909fc98a2460ffc1c7becf17b7417e391e7
+commit 6e6725fe403fbdeefce38f0e39e56aff0cb41d8c
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon May 5 11:23:48 2014 +0300
+Date:   Sat May 10 17:15:55 2014 +0300
 
-    Fix compilation warnings
+    silc-client: target public key verification better
+    
+    Use the context set by library to show the actual nickname of the client
+    whose public key we are verifying.
 
-commit 0a948452f74af6a7440cee4243c54ed8bb534b13
+commit 725af813951d3c77b38c52ff02bf43bf892370ea
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon May 5 11:23:33 2014 +0300
+Date:   Sat May 10 14:56:44 2014 +0300
 
-    silc-client: rpm packaging updates
+    silc-client: don't show GETKEY public key verification twice
 
-commit 0c5b4cf8af092fd6c3d3d4cd03efd299c7020cc1
+commit 1ea34b3821a3590c5402a55b4e4e69924db734e7
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue Apr 29 10:56:24 2014 +0300
+Date:   Sat May 10 14:54:19 2014 +0300
 
-    SKE: handle invalid protocol state errors
+    silc-client: show successful client public key verification
     
-    With SKE over UDP we can receive packets in wrong order or do
-    retransmissions but in TCP receiving wrong SKE packet at wrong time is
-    a protocol error and must result to end of the key exchange.
+    When successfully verified client's public key, which now most of the
+    time happens when sending private message for the first time, show it
+    on the screen so user can be sure of it.
 
-commit 79b406da2cc03883eb2da6c8c69ff2d7a9356df9
+commit 071aff87b3b9aa4005ab3012ffd688fe10dcee9e
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 23:01:30 2014 +0300
+Date:   Sat May 10 13:51:44 2014 +0300
 
-    irssi: better public key print out
-    
-    When verifying public key show more information about it.
+    silcclient: fix error reporting in silc_client_init
 
-commit 80d10dbf48785c2163551a7f94a46f6f5849c4a7
+commit 18d69a0a1fec438e241bb4f431506ed59a34066b
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 22:59:28 2014 +0300
+Date:   Sat May 10 13:48:33 2014 +0300
 
-    silcclient: auto-negotiation of private message key using SKE over SILCnet
-    
-    Previously in SILC private messages have been protected in normal mode
-    using the session key shared between the client and server and other
-    servers in the network.  This obviously has security implications if
-    the SILC servers cannot be trusted.
-    
-    To overcome this issue silcclient library has offered user the ability to
-    use pre-shared key (or password) as the secret key to protect private
-    message, or to negotiate fresh key material using SKE peer-to-peer over
-    the internet (key agreement).
-    
-    However, both of these feature have severe limitations.  The first one
-    requiring coordinated effort to somehow share the key or password and
-    the second requiring peer-to-peer connection which may not be possible
-    due to NAT and firewalls.
-    
-    This commit adds a new private message protection method and takes it
-    into use as the default protection method.  The commits adds support
-    for automatic negotiation of the private message key using SKE but instead
-    of doing it peer-to-peer over the internet it is done client-to-client
-    over the SILC network itself.  This is accomplished by tunneling the
-    SKE protocol inside private message packets.  As SKE is safe over the
-    unprotected and untrusted internet it is safe also over the SILC network.
-    
-    The end result of the auto-negotiation is a shared secret known only
-    to the two clients.  The SKE provides mutual authentication with digital
-    signatures to prevent man-in-the-middle attack.  The private messages
-    protected with this key can be read only by the two clients.  SILC servers
-    along the way cannot decrypt them.  The key is periodically re-keyed
-    (5 minutes or so) and it provides Perfect Forward Secrecy.
-    
-    The auto-negotiation is enabled by default.  It can detect within seconds
-    if the remote client supports the method and if it doesn't it gives a
-    notification that the private message protection has been reverted back
-    to session keys.  Application can disable the feature, if wanted.
-    
-    This feature does not require any changes to SILC servers.
+    Merge Irssi 0.8.16-rc1
 
-commit d7f1e81fea0d1da2ac870b8dfa600669aa280cd5
+commit 02745be76c1b9cee66b66a5e5bcd79b4b7f6d2a2
 Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 22:43:44 2014 +0300
+Date:   Tue May 6 18:24:58 2014 +0300
 
-    silcclient: fix packet stream coder function
+    silcclient: handle command timeout error correctly
     
-    Generate correct FTP packet after, after the packet stream coder function
-    semantics changed in commit 705167687caeaa66c371dce7cc88719687337b9e.
+    If command which can return a list of entries such as the LIST command
+    timeouts the cmd->status may be something other than SILC_STATUS_OK,
+    ie. _LIST_END for example which then means ERROR_CALLBACK won't update
+    the SILC_STATUS_ERR_TIMEOUT correctly to the cmd context.  This can
+    crash the application handling the command reply.  Clear the cmd->status
+    in case the command timedout.
 
-commit 77774e96ef3f5011bb85f7e0ec68a7f3a4a4d6e8
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 22:42:43 2014 +0300
-
-    silcclient: Add generic client entry operation context
-    
-    Add generic client entry async operation context to the internal
-    context.  Change the key agreement to start using it.
-    
-    Add support for aborting client entry operations when the client entry
-    is deleted or when the connection is closed to the server.
-
-commit 7f26bf8964b7269f9a9f295afdff1b870ecc68e2
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 22:39:06 2014 +0300
-
-    SKE: support for simplified key exchange
-    
-    This commit adds support for simplified SILC Key Exchange protocol by
-    allowing the caller to specify the security properties to be used in
-    the key exchange.  This will stop the library from exchanging the
-    SILC_PACKET_KEY_EXCHANGE packet containing the properties.
-    
-    Support for not sending the SILC_PACKET_SUCCESS acks after a successful
-    key exchange.
-    
-    These two changes allow the SKE to be simplified to exchanging only
-    the SILC_PACKET_KEY_EXHANGE_1 and SILC_PACKET_KEY_EXCHANGE_2 packets
-    to produce the shared key and to do mutual authentication.
-    
-    The commit also adds support for generating small proposals in
-    SILC_PACKET_KEY_EXCHANGE packet by including only one security property
-    per item instead of listing all of them in the proposal.
-    
-    Additionally the commit adds support for probe timeout which affects
-    the first packet sent by initiator.  If responder does not respond to
-    the first packet in the specified timeframe the key exchange will
-    timeout.  If it replies the normal key exchange timeout has effect after
-    that.
-
-commit 705167687caeaa66c371dce7cc88719687337b9e
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 22:31:35 2014 +0300
-
-    silccore: packet injection and stream wrap improvements
-    
-    Add silc_packet_stream_inject to allow injecting of packets to the
-    specified packet stream.
-    
-    Add support for specifying the source and destination ids for the
-    wrapped packet stream allowing to use them in packet sending and using
-    them in packet reception to take only packets with the specified ids.
-    
-    The semantics of CAN_WRITE and CAN_READ of wrapped packet stream coder
-    function has been changed to allow the coder to filter out packets it
-    does not want or to handle errors in coding.
-
-commit 0b9028b4a1bf48ee0eea4ff231d302b24ccb924d
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 21:49:23 2014 +0300
-
-    Targeted library message to correct Irssi window
-    
-    Add support for sending the library generated say-operation messages
-    to correct window using either nickname or channel name as the target.
-    Irssi does the rest to show the message in correct window.
-
-commit 7ba30123577540d59575c8f020bad86c52c21f59
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 21:47:58 2014 +0300
-
-    Targeted say-operation messages
-    
-    Add support for including the client, channel or server with the say()
-    client operation library can generate.  This allows application to
-    better target the message to correct window or recipient.
-
-commit d0c0355c2fa9ef0aa699010242479366c06b7041
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Mon Apr 28 15:05:58 2014 +0300
-
-    Fix file transfer crash
-    
-    When silc-client accepts new file transfer and receives public key to
-    verify it will crash because the client connection has no Irssi server
-    associated to it.  Handle this gracefully.
-    
-    Call the sucessful public key verify completion after the key has been
-    saved because the completion callback may free the public key.
-
-commit 2559c5da3d5353f97f16b387bff02373b258a3df
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Sun Apr 27 10:38:34 2014 +0300
-
-    Static analyzer fixes
-    
-    More small fixes resulting from clang static analysis.
-
-commit 644f8b14010e05d55b5cde8514f6efdca8c21c5b
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue Apr 22 15:29:07 2014 +0300
-
-    Enable higher security messages MACs
-    
-    The code to include the source and destination ID in the message payload
-    MAC has been there for a long time but the use of it has been disabled.
-    This commit enables it but preserves the backwards support for those
-    clients unable to verify the MACs.  The support for the newer MACs
-    have been there for several years.
-
-commit e7ecca35b79220f947ae30c98f80688db1d2a101
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue Apr 22 15:26:55 2014 +0300
-
-    Remove obsolete backwards support code
-    
-    Remove the old zero-client id backwards support when starting SKE protocol.
-
-commit 40df0fe9d2a0a7648a111ca03de16f7a740cf5ad
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue Apr 22 15:25:37 2014 +0300
-
-    Longer default PKCS keys
-    
-    This commit changes the default PKCS key length from 2048 bits to 4096
-    bits.  It adds warnings to both SILC client and SILC server in start up
-    in case the existing key is shorter than 4096 to encourage people to
-    generate new key longer key pair.
-    
-    This commit also changes the default SKE DH group from 1024 to 1536 bits.
-    The old group is still supported.
-
-commit d4ead7075692a4abdc487fcb422cb9fd5b41a596
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue Apr 22 15:22:38 2014 +0300
-
-    Static analyzer bug fixes
-    
-    Bunch of small bugs fixed here and there found during static analysis.
-
-commit f38b21315fc72df3914664227ebcece766f01f66
-Author: Pekka Riikonen <priikone@Pekkas-MacBook-Air.local>
-Date:   Fri Jun 22 22:21:38 2012 +0300
-
-    Mac OS X >= 10.7 support
-    
-    Add support for compiling on Mac OS X > 10.7 and newer.  Summary of
-    changes:
-    
-     - Remove config.guess and config.sub, let the autodist copy proper
-       versions from the system.
-    
-     - Add support for autoconfg 2.68 and newer.
-    
-     - Add support for compiing x86-64 AES code with NASM.
-    
-     - Update Mac OS X installation instructions.
-
-commit 27a4ad25c65fa7b4fdbbe53b3551a687a9b43214
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue May 25 07:24:28 2010 +0300
-
-    Client: Fix signature verification double free
-    
-    When client receives public key in the message payload and is compared
-    against the client's own public key, when the keys differ we have to
-    return immediately and not try to verify the signature.
-
-commit a2f2afc03242a6f8b77953203f8e3767a6e703c4
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue May 11 07:44:09 2010 +0300
-
-    Packet engine: prevent divide by 0
-
-commit 5fff0bf9cd2c72027c9f42f2e60b415ba4848ae6
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Tue May 11 07:41:03 2010 +0300
-
-    SKE: Make sure failure received from remote is error status.
-
-commit bb61286f7ac90ebcdaa9b00991a9a98b6cd8663f
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Fri Sep 25 12:07:41 2009 +0300
-
-    Set SO_KEEPALIVE for all accept()ed sockets.
-
-commit 80bb7b35c2a1f44702631f1a5cf5685d5ce4b2c7
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Fri Sep 25 12:06:45 2009 +0300
-
-    clientlib: Close connection after failed rekey
-
-commit 8cb801cf6482666818e721822ce81c81ec818908
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Fri Aug 7 14:48:46 2009 +0300
-
-    More string format fixes in silcd and client libary
-
-commit 97fa30748eed3f4248bd213ae3ab9e742fd36c71
-Author: Pekka Riikonen <priikone@silcnet.org>
-Date:   Sun Aug 2 10:11:20 2009 +0300
-
-    configure: changed AC_PROG_LIBTOOL order to fix disabling shared libs
-
- .cvsignore => .gitignore                           |   18 +
- INSTALL                                            |    3 +
- README                                             |  114 +-
- README.MACOSX                                      |   33 +-
- TODO                                               |  304 +-
- apps/irssi/silc-client.spec.in                     |   11 +-
- apps/irssi/src/perl/silc/Makefile.PL.in            |    2 +-
- apps/irssi/src/silc/core/client_ops.c              |   98 +-
- apps/irssi/src/silc/core/clientutil.c              |   22 +-
- apps/irssi/src/silc/core/silc-channels.c           |    2 +
- apps/irssi/src/silc/core/silc-core.h               |    2 +-
- apps/irssi/src/silc/core/silc-queries.c            |    6 +-
- apps/irssi/src/silc/core/silc-servers.c            |   11 +-
- config.guess                                       | 1471 -----
- config.sub                                         | 1599 -----
- configure.ad                                       |   64 +-
- distdir/pre-run                                    |    2 +-
- lib/Makefile.ad                                    |    8 +-
- lib/configure.ad                                   |   16 +-
- lib/contrib/nfkc.c                                 |    3 +
- lib/doc/LIBINDEX                                   |    2 +-
- lib/silcapputil/silcapputil.c                      |    4 +-
- lib/silcapputil/silcapputil.h                      |    2 +-
- lib/silcasn1/silcasn1.c                            |    4 +-
- lib/silcasn1/silcasn1_decode.c                     |    2 +-
- lib/silcasn1/silcasn1_encode.c                     |    2 +-
- lib/silcclient/client.c                            |   27 +-
- lib/silcclient/client.h                            |   11 +-
- lib/silcclient/client_attrs.c                      |    2 +-
- lib/silcclient/client_channel.c                    |   20 +-
- lib/silcclient/client_connect.c                    |   14 +-
- lib/silcclient/client_entry.c                      |   22 +-
- lib/silcclient/client_ftp.c                        |   17 +-
- lib/silcclient/client_internal.h                   |    6 +-
- lib/silcclient/client_keyagr.c                     |   32 +-
- lib/silcclient/client_listener.c                   |    2 +-
- lib/silcclient/client_notify.c                     |    2 +-
- lib/silcclient/client_prvmsg.c                     |  720 ++-
- lib/silcclient/client_prvmsg.h                     |   12 +-
- lib/silcclient/client_register.c                   |    2 +-
- lib/silcclient/command.c                           |    8 +-
- lib/silcclient/command_reply.c                     |   12 +-
- lib/silcclient/silcclient.h                        |   24 +-
- lib/silcclient/tests/test_silcclient.c             |    4 +-
- lib/silccore/silcargument.c                        |    2 -
- lib/silccore/silcattrs.c                           |    9 +-
- lib/silccore/silcauth.c                            |    2 +-
- lib/silccore/silcmessage.c                         |   21 +-
- lib/silccore/silcmessage.h                         |    5 +-
- lib/silccore/silcpacket.c                          |  145 +-
- lib/silccore/silcpacket.h                          |   60 +-
- lib/silccore/tests/test_silcmessage.c              |    4 +-
- lib/silccrypt/aes.c                                |   18 +-
- lib/silccrypt/aes_x86_64.asm                       |    8 +-
- lib/silccrypt/md5.c                                |    2 +-
- lib/silccrypt/silccipher.c                         |    3 +-
- lib/silccrypt/silchash.c                           |    3 +-
- lib/silccrypt/silchmac.c                           |    3 +-
- lib/silccrypt/silcpk.h                             |    4 +-
- lib/silccrypt/silcpkcs.c                           |    3 +-
- lib/silccrypt/silcpkcs1.c                          |   32 +-
- lib/silccrypt/silcrng.c                            |   18 +-
- lib/silccrypt/tests/test_silcpkcs.c                |    4 +-
- lib/silccrypt/twofish.c                            |    2 +-
- lib/silchttp/silchttpserver.c                      |    3 +
- lib/silcmath/mp_gmp.c                              |    3 +-
- lib/silcmath/mp_tfm.c                              |    3 +-
- lib/silcmath/mp_tma.c                              |    3 +-
- lib/silcmath/silcmp.h                              |    2 +-
- lib/silcmath/tma.c                                 |    5 +
- lib/silcserver/tests/test_silcserver.c             |    2 +-
- lib/silcsftp/sftp_fs_memory.c                      |    2 +
- lib/silcske/groups.c                               |   44 +-
- lib/silcske/payload.c                              |   11 +-
- lib/silcske/silcske.c                              |  531 +-
- lib/silcske/silcske.h                              |   23 +-
- lib/silcske/silcske_groups.h                       |    7 +-
- lib/silcske/silcske_i.h                            |    4 +-
- lib/silcutil/Makefile.ad                           |    2 -
- lib/silcutil/silcbuffmt.c                          |    4 +-
- lib/silcutil/silcfileutil.c                        |    2 +-
- lib/silcutil/silcmemory.h                          |    4 -
- lib/silcutil/silcmime.c                            |    5 +-
- lib/silcutil/silcnet.c                             |   54 +-
- lib/silcutil/silcschedule.c                        |    9 +-
- lib/silcutil/silctime.c                            |    8 +-
- lib/silcutil/stacktrace.c                          |   58 +-
- lib/silcutil/unix/silcunixnet.c                    |    1 +
- silc-toolkit.spec.in                               |  250 +-
- 180 files changed, 15547 insertions(+), 8216 deletions(-)
- rename .cvsignore => .gitignore (70%)
- delete mode 100755 config.guess
- delete mode 100755 config.sub
+ .gitignore                                         |     2 -
+ README.CVS                                         |   233 -
+ README.PLUGIN                                      |    64 +-
+ apps/irssi/.cvsignore                              |    38 -
+ apps/irssi/AUTHORS                                 |    21 +-
+ apps/irssi/COPYING                                 |   344 +
+ apps/irssi/ChangeLog                               | 38277 +++++++++++++++++++
+ apps/irssi/Makefile.am                             |    59 +-
+ apps/irssi/NEWS                                    |   271 +-
+ apps/irssi/README                                  |    13 +-
+ apps/irssi/TODO                                    |   195 +-
+ apps/irssi/acconfig.h                              |    22 +-
+ apps/irssi/autogen.sh                              |   122 +-
+ apps/irssi/build-aux/depcomp                       |   707 +
+ apps/irssi/build-aux/install-sh                    |   527 +
+ apps/irssi/build-aux/missing                       |   330 +
+ apps/irssi/configure.in                            |   622 +-
+ apps/irssi/curses.m4                               |    68 +-
+ apps/irssi/default.theme                           |   258 +-
+ apps/irssi/docs/Makefile.am                        |    14 +-
+ apps/irssi/docs/design.txt                         |    12 +-
+ apps/irssi/docs/faq.html                           |     2 +-
+ apps/irssi/docs/help/in/Makefile.am.gen            |     3 +-
+ apps/irssi/docs/help/in/admin.in                   |     6 +-
+ apps/irssi/docs/help/in/bind.in                    |    61 +-
+ apps/irssi/docs/help/in/cat.in                     |     2 +-
+ apps/irssi/docs/help/in/cd.in                      |     2 +-
+ apps/irssi/docs/help/in/clear.in                   |     1 +
+ apps/irssi/docs/help/in/cycle.in                   |     2 +-
+ apps/irssi/docs/help/in/dehilight.in               |     5 +-
+ apps/irssi/docs/help/in/exec.in                    |     7 +-
+ apps/irssi/docs/help/in/hilight.in                 |     6 +-
+ apps/irssi/docs/help/in/ignore.in                  |    12 +-
+ apps/irssi/docs/help/in/invitelist.in              |     2 +-
+ apps/irssi/docs/help/in/lastlog.in                 |     4 +-
+ apps/irssi/docs/help/in/layout.in                  |    12 +-
+ apps/irssi/docs/help/in/part.in                    |     3 +-
+ apps/irssi/docs/help/in/query.in                   |    11 +-
+ apps/irssi/docs/help/in/reload.in                  |     2 +-
+ apps/irssi/docs/help/in/save.in                    |     8 +-
+ apps/irssi/docs/help/in/script.in                  |     2 +-
+ apps/irssi/docs/help/in/scrollback.in              |    16 +-
+ apps/irssi/docs/help/in/statusbar.in               |     8 +-
+ apps/irssi/docs/help/in/unignore.in                |     3 +-
+ apps/irssi/docs/help/in/unload.in                  |     4 +-
+ apps/irssi/docs/help/in/window.in                  |    12 +-
+ apps/irssi/docs/manual.txt                         |   212 +-
+ apps/irssi/docs/perl.txt                           |    94 +-
+ apps/irssi/docs/signals.txt                        |    15 +-
+ apps/irssi/docs/startup-HOWTO.html                 |     4 +-
+ apps/irssi/glib-2.0.m4                             |   208 +
+ apps/irssi/glib.m4                                 |   196 +
+ apps/irssi/install-sh                              |   527 +
+ apps/irssi/irssi-config.in                         |     2 +-
+ apps/irssi/libtool.m4                              |  7982 ++++
+ apps/irssi/ltoptions.m4                            |   384 +
+ apps/irssi/ltsugar.m4                              |   123 +
+ apps/irssi/ltversion.m4                            |    23 +
+ apps/irssi/lt~obsolete.m4                          |    98 +
+ apps/irssi/scripts/Makefile.am                     |     2 +-
+ apps/irssi/silc.conf                               |     2 +-
+ apps/irssi/src/Makefile.am                         |     2 +-
+ apps/irssi/src/common.h                            |    24 +-
+ apps/irssi/src/core/args.c                         |    48 +-
+ apps/irssi/src/core/args.h                         |    10 +-
+ apps/irssi/src/core/channels-setup.c               |     6 +-
+ apps/irssi/src/core/channels.c                     |     8 +-
+ apps/irssi/src/core/chat-commands.c                |    62 +-
+ apps/irssi/src/core/chat-protocols.c               |     6 +-
+ apps/irssi/src/core/chatnets.c                     |    11 +-
+ apps/irssi/src/core/commands.c                     |    22 +-
+ apps/irssi/src/core/core.c                         |    84 +-
+ apps/irssi/src/core/core.h                         |     3 +-
+ apps/irssi/src/core/expandos.c                     |    20 +-
+ apps/irssi/src/core/ignore.c                       |    80 +-
+ apps/irssi/src/core/levels.c                       |    23 +-
+ apps/irssi/src/core/levels.h                       |     2 +-
+ apps/irssi/src/core/line-split.c                   |    17 +-
+ apps/irssi/src/core/log-away.c                     |     6 +-
+ apps/irssi/src/core/log.c                          |    32 +-
+ apps/irssi/src/core/masks.c                        |     6 +-
+ apps/irssi/src/core/misc.c                         |   137 +-
+ apps/irssi/src/core/misc.h                         |    75 +-
+ apps/irssi/src/core/modules-load.c                 |     8 +-
+ apps/irssi/src/core/modules.c                      |     6 +-
+ apps/irssi/src/core/net-disconnect.c               |     8 +-
+ apps/irssi/src/core/net-disconnect.h               |     4 +
+ apps/irssi/src/core/net-nonblock.c                 |    35 +-
+ apps/irssi/src/core/net-sendbuffer.c               |    52 +-
+ apps/irssi/src/core/net-sendbuffer.h               |     9 +-
+ apps/irssi/src/core/network-openssl.c              |   634 +-
+ apps/irssi/src/core/network.c                      |    69 +-
+ apps/irssi/src/core/network.h                      |     8 +-
+ apps/irssi/src/core/nick-rec.h                     |     2 +-
+ apps/irssi/src/core/nicklist.c                     |    78 +-
+ apps/irssi/src/core/nicklist.h                     |     7 +-
+ apps/irssi/src/core/nickmatch-cache.c              |     6 +-
+ apps/irssi/src/core/pidwait.c                      |    56 +-
+ apps/irssi/src/core/queries.c                      |     6 +-
+ apps/irssi/src/core/rawlog.c                       |     6 +-
+ apps/irssi/src/core/recode.c                       |   168 +-
+ apps/irssi/src/core/recode.h                       |     1 +
+ apps/irssi/src/core/server-connect-rec.h           |     1 +
+ apps/irssi/src/core/server-rec.h                   |     1 -
+ apps/irssi/src/core/servers-reconnect.c            |    24 +-
+ apps/irssi/src/core/servers-setup.c                |    35 +-
+ apps/irssi/src/core/servers-setup.h                |     2 -
+ apps/irssi/src/core/servers.c                      |    61 +-
+ apps/irssi/src/core/session.c                      |    80 +-
+ apps/irssi/src/core/session.h                      |     1 +
+ apps/irssi/src/core/settings.c                     |   123 +-
+ apps/irssi/src/core/settings.h                     |     3 +-
+ apps/irssi/src/core/signals.c                      |     6 +-
+ apps/irssi/src/core/special-vars.c                 |    39 +-
+ apps/irssi/src/core/write-buffer.c                 |     6 +-
+ apps/irssi/src/fe-common/core/Makefile.am          |     9 +-
+ apps/irssi/src/fe-common/core/autorun.c            |    56 -
+ apps/irssi/src/fe-common/core/autorun.h            |     6 -
+ apps/irssi/src/fe-common/core/chat-completion.c    |    54 +-
+ apps/irssi/src/fe-common/core/command-history.c    |     6 +-
+ apps/irssi/src/fe-common/core/command-history.h    |     2 +-
+ apps/irssi/src/fe-common/core/completion.c         |    82 +-
+ apps/irssi/src/fe-common/core/completion.h         |     2 +-
+ apps/irssi/src/fe-common/core/fe-channels.c        |   113 +-
+ apps/irssi/src/fe-common/core/fe-common-core.c     |   118 +-
+ apps/irssi/src/fe-common/core/fe-common-core.h     |     5 +
+ apps/irssi/src/fe-common/core/fe-core-commands.c   |    72 +-
+ apps/irssi/src/fe-common/core/fe-exec.c            |    57 +-
+ apps/irssi/src/fe-common/core/fe-expandos.c        |     6 +-
+ apps/irssi/src/fe-common/core/fe-help.c            |    51 +-
+ apps/irssi/src/fe-common/core/fe-ignore-messages.c |     6 +-
+ apps/irssi/src/fe-common/core/fe-ignore.c          |    14 +-
+ apps/irssi/src/fe-common/core/fe-log.c             |    80 +-
+ apps/irssi/src/fe-common/core/fe-messages.c        |    73 +-
+ apps/irssi/src/fe-common/core/fe-modules.c         |    16 +-
+ apps/irssi/src/fe-common/core/fe-queries.c         |     8 +-
+ apps/irssi/src/fe-common/core/fe-recode.c          |    56 +-
+ apps/irssi/src/fe-common/core/fe-server.c          |    34 +-
+ apps/irssi/src/fe-common/core/fe-settings.c        |   139 +-
+ apps/irssi/src/fe-common/core/fe-windows.c         |    13 +-
+ apps/irssi/src/fe-common/core/formats.c            |    96 +-
+ apps/irssi/src/fe-common/core/formats.h            |     4 +-
+ apps/irssi/src/fe-common/core/hilight-text.c       |    38 +-
+ apps/irssi/src/fe-common/core/keyboard.c           |    34 +-
+ apps/irssi/src/fe-common/core/module-formats.c     |    22 +-
+ apps/irssi/src/fe-common/core/module-formats.h     |     4 +-
+ apps/irssi/src/fe-common/core/printtext.c          |    41 +-
+ apps/irssi/src/fe-common/core/printtext.h          |     1 +
+ apps/irssi/src/fe-common/core/themes.c             |    11 +-
+ apps/irssi/src/fe-common/core/translation.c        |   152 -
+ apps/irssi/src/fe-common/core/translation.h        |    12 -
+ apps/irssi/src/fe-common/core/utf8.c               |   251 +-
+ apps/irssi/src/fe-common/core/utf8.h               |    25 +-
+ apps/irssi/src/fe-common/core/wcwidth.c            |   220 +
+ apps/irssi/src/fe-common/core/window-activity.c    |    25 +-
+ apps/irssi/src/fe-common/core/window-commands.c    |   103 +-
+ apps/irssi/src/fe-common/core/window-items.c       |    41 +-
+ apps/irssi/src/fe-common/core/windows-layout.c     |    38 +-
+ apps/irssi/src/fe-text/Makefile.am                 |    14 +-
+ apps/irssi/src/fe-text/cuix-api.c                  |   386 -
+ apps/irssi/src/fe-text/cuix-api.h                  |    68 -
+ apps/irssi/src/fe-text/cuix-lib.c                  |   139 -
+ apps/irssi/src/fe-text/cuix-lib.h                  |     9 -
+ apps/irssi/src/fe-text/cuix.c                      |    39 -
+ apps/irssi/src/fe-text/cuix.h                      |    11 -
+ apps/irssi/src/fe-text/gui-entry.c                 |   173 +-
+ apps/irssi/src/fe-text/gui-entry.h                 |     1 +
+ apps/irssi/src/fe-text/gui-expandos.c              |     7 +-
+ apps/irssi/src/fe-text/gui-printtext.c             |    92 +-
+ apps/irssi/src/fe-text/gui-readline.c              |   365 +-
+ apps/irssi/src/fe-text/gui-windows.c               |    10 +-
+ apps/irssi/src/fe-text/lastlog.c                   |    75 +-
+ apps/irssi/src/fe-text/mainwindow-activity.c       |    10 +-
+ apps/irssi/src/fe-text/mainwindows-layout.c        |     6 +-
+ apps/irssi/src/fe-text/mainwindows.c               |    55 +-
+ apps/irssi/src/fe-text/module-formats.c            |     6 +-
+ apps/irssi/src/fe-text/silc.c                      |    68 +-
+ apps/irssi/src/fe-text/statusbar-config.c          |    33 +-
+ apps/irssi/src/fe-text/statusbar-item.h            |    17 +
+ apps/irssi/src/fe-text/statusbar-items.c           |   126 +-
+ apps/irssi/src/fe-text/statusbar.c                 |    89 +-
+ apps/irssi/src/fe-text/statusbar.h                 |    11 +-
+ apps/irssi/src/fe-text/term-curses.c               |    52 +-
+ apps/irssi/src/fe-text/term-dummy.c                |     6 +-
+ apps/irssi/src/fe-text/term-terminfo.c             |   205 +-
+ apps/irssi/src/fe-text/term.c                      |    24 +-
+ apps/irssi/src/fe-text/term.h                      |    13 +-
+ apps/irssi/src/fe-text/terminfo-core.c             |   177 +-
+ apps/irssi/src/fe-text/terminfo-core.h             |    12 +-
+ apps/irssi/src/fe-text/textbuffer-commands.c       |   124 +-
+ apps/irssi/src/fe-text/textbuffer-reformat.c       |   281 -
+ apps/irssi/src/fe-text/textbuffer-reformat.h       |     9 -
+ apps/irssi/src/fe-text/textbuffer-view.c           |   163 +-
+ apps/irssi/src/fe-text/textbuffer-view.h           |     1 +
+ apps/irssi/src/fe-text/textbuffer.c                |   232 +-
+ apps/irssi/src/fe-text/textbuffer.h                |    28 +-
+ apps/irssi/src/lib-config/Makefile.am              |     4 +-
+ apps/irssi/src/lib-config/get.c                    |    51 +-
+ apps/irssi/src/lib-config/iconfig.h                |    27 +-
+ apps/irssi/src/lib-config/parse.c                  |    27 +-
+ apps/irssi/src/lib-config/set.c                    |     9 +-
+ apps/irssi/src/lib-config/write.c                  |    49 +-
+ apps/irssi/src/lib-popt/.cvsignore                 |     7 -
+ apps/irssi/src/lib-popt/Makefile.am                |    11 -
+ apps/irssi/src/lib-popt/findme.c                   |    54 -
+ apps/irssi/src/lib-popt/findme.h                   |    10 -
+ apps/irssi/src/lib-popt/popt.c                     |   594 -
+ apps/irssi/src/lib-popt/popt.h                     |   123 -
+ apps/irssi/src/lib-popt/poptconfig.c               |   144 -
+ apps/irssi/src/lib-popt/popthelp.c                 |   301 -
+ apps/irssi/src/lib-popt/poptint.h                  |    54 -
+ apps/irssi/src/lib-popt/poptparse.c                |    98 -
+ apps/irssi/src/perl/Makefile.am                    |    43 +-
+ apps/irssi/src/perl/common/Core.xs                 |    99 +-
+ apps/irssi/src/perl/common/Expando.xs              |    12 +-
+ apps/irssi/src/perl/common/Settings.xs             |     3 -
+ apps/irssi/src/perl/get-signals.pl                 |    15 +-
+ apps/irssi/src/perl/irssi-core.pl                  |    44 +-
+ apps/irssi/src/perl/irssi-core.pl.h                |    44 +-
+ apps/irssi/src/perl/module-formats.c               |     6 +-
+ apps/irssi/src/perl/module.h                       |     9 +-
+ apps/irssi/src/perl/perl-common.c                  |    27 +-
+ apps/irssi/src/perl/perl-common.h                  |     6 -
+ apps/irssi/src/perl/perl-core.c                    |    30 +-
+ apps/irssi/src/perl/perl-fe.c                      |     8 +-
+ apps/irssi/src/perl/perl-signals.c                 |   181 +-
+ apps/irssi/src/perl/perl-signals.h                 |     3 +
+ apps/irssi/src/perl/perl-sources.c                 |    12 +-
+ apps/irssi/src/perl/textui/TextBuffer.xs           |    49 -
+ apps/irssi/src/perl/textui/TextBufferView.xs       |    23 -
+ apps/irssi/src/perl/textui/TextUI.xs               |    38 +-
+ apps/irssi/src/perl/textui/module.h                |     1 +
+ apps/irssi/src/perl/ui/Themes.xs                   |    20 +-
+ apps/irssi/src/perl/ui/Window.xs                   |    11 +
+ apps/irssi/src/silc/core/client_ops.c              |    31 +-
+ apps/irssi/src/silc/core/silc-core.c               |   284 +-
+ apps/irssi/src/silc/core/silc-core.h               |     1 -
+ apps/irssi/src/silc/core/silc-expandos.c           |     2 +-
+ apps/irssi/src/silc/core/silc-servers.c            |    12 +-
+ apps/irssi/syntax.pl                               |    33 +-
+ configure.ad                                       |     2 +-
+ distdir/pre-run                                    |     7 +-
+ doc/Makefile.ad                                    |     8 +-
+ 251 files changed, 54544 insertions(+), 7975 deletions(-)
+ delete mode 100644 README.CVS
+ delete mode 100644 apps/irssi/.cvsignore
+ create mode 100644 apps/irssi/COPYING
+ create mode 100755 apps/irssi/build-aux/depcomp
+ create mode 100755 apps/irssi/build-aux/install-sh
+ create mode 100755 apps/irssi/build-aux/missing
+ create mode 100644 apps/irssi/glib-2.0.m4
+ create mode 100644 apps/irssi/glib.m4
+ create mode 100755 apps/irssi/install-sh
+ create mode 100644 apps/irssi/libtool.m4
+ create mode 100644 apps/irssi/ltoptions.m4
+ create mode 100644 apps/irssi/ltsugar.m4
+ create mode 100644 apps/irssi/ltversion.m4
+ create mode 100644 apps/irssi/lt~obsolete.m4
+ delete mode 100644 apps/irssi/src/fe-common/core/autorun.c
+ delete mode 100644 apps/irssi/src/fe-common/core/autorun.h
+ delete mode 100644 apps/irssi/src/fe-common/core/translation.c
+ delete mode 100644 apps/irssi/src/fe-common/core/translation.h
+ create mode 100644 apps/irssi/src/fe-common/core/wcwidth.c
+ delete mode 100644 apps/irssi/src/fe-text/cuix-api.c
+ delete mode 100644 apps/irssi/src/fe-text/cuix-api.h
+ delete mode 100644 apps/irssi/src/fe-text/cuix-lib.c
+ delete mode 100644 apps/irssi/src/fe-text/cuix-lib.h
+ delete mode 100644 apps/irssi/src/fe-text/cuix.c
+ delete mode 100644 apps/irssi/src/fe-text/cuix.h
+ create mode 100644 apps/irssi/src/fe-text/statusbar-item.h
+ delete mode 100644 apps/irssi/src/fe-text/textbuffer-reformat.c
+ delete mode 100644 apps/irssi/src/fe-text/textbuffer-reformat.h
+ delete mode 100644 apps/irssi/src/lib-popt/.cvsignore
+ delete mode 100644 apps/irssi/src/lib-popt/Makefile.am
+ delete mode 100644 apps/irssi/src/lib-popt/findme.c
+ delete mode 100644 apps/irssi/src/lib-popt/findme.h
+ delete mode 100644 apps/irssi/src/lib-popt/popt.c
+ delete mode 100644 apps/irssi/src/lib-popt/popt.h
+ delete mode 100644 apps/irssi/src/lib-popt/poptconfig.c
+ delete mode 100644 apps/irssi/src/lib-popt/popthelp.c
+ delete mode 100644 apps/irssi/src/lib-popt/poptint.h
+ delete mode 100644 apps/irssi/src/lib-popt/poptparse.c
